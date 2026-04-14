@@ -82,6 +82,7 @@ class Bot(commands.AutoBot):
         ]
 
         resp: twitchio.MultiSubscribePayload = await self.multi_subscribe(subs)
+        LOGGER.info("Subscription results for user %s: successes=%r errors=%r", payload.user_id, resp.subscriptions, resp.errors)
         if resp.errors:
             LOGGER.warning("Failed to subscribe to: %r, for user: %s", resp.errors, payload.user_id)
 
@@ -126,6 +127,7 @@ class MyComponent(commands.Component):
     # We use a listener in our Component to display the messages received.
     @commands.Component.listener()
     async def event_message(self, payload: twitchio.ChatMessage) -> None:
+        LOGGER.info("event_message fired: broadcaster=%s chatter=%s text=%s", payload.broadcaster.name, payload.chatter.name, payload.text)
         print(f"[{payload.broadcaster.name}] - {payload.chatter.name}: {payload.text}")
 
     @commands.command()
@@ -195,10 +197,13 @@ async def setup_database(db: asqlite.Pool) -> tuple[list[tuple[str, str]], list[
 
         for row in rows:
             tokens.append((row["token"], row["refresh"]))
+            LOGGER.info("Loaded token for user_id=%s", row["user_id"])
 
             if row["user_id"] == BOT_ID:
+                LOGGER.info("Skipping subscriptions for bot account %s", BOT_ID)
                 continue
 
+            LOGGER.info("Building subscriptions for broadcaster user_id=%s", row["user_id"])
             subs.extend([
                 eventsub.ChatMessageSubscription(broadcaster_user_id=row["user_id"], user_id=BOT_ID),
                 eventsub.ChatNotificationSubscription(broadcaster_user_id=row["user_id"], user_id=BOT_ID),
