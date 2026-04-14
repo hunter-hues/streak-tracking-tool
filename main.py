@@ -52,6 +52,7 @@ class Bot(commands.AutoBot):
             prefix="!",
             subscriptions=subs,
             force_subscribe=True,
+            redirect_uri="https://pry-shank-legged.ngrok-free.dev/oauth/callback",
         )
 
     async def setup_hook(self) -> None:
