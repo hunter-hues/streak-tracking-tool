@@ -59,7 +59,7 @@ class Bot(commands.AutoBot):
 
         class CustomAdapter(AiohttpAdapter):
             def _find_redirect(self, request):
-                return self.redirect_url
+                return "https://pry-shank-legged.ngrok-free.dev/oauth/callback"
 
         adapter = CustomAdapter(port=4343, domain="pry-shank-legged.ngrok-free.dev")
         await self.set_adapter(adapter)
