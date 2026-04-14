@@ -56,7 +56,9 @@ class Bot(commands.AutoBot):
         )
 
     async def setup_hook(self) -> None:
-        # Add our component which contains our commands...
+        from twitchio.web import AiohttpAdapter
+        adapter = AiohttpAdapter(host="localhost", port=4343, external_url="https://pry-shank-legged.ngrok-free.dev")
+        await self.set_adapter(adapter)
         await self.add_component(MyComponent(self))
 
     async def event_oauth_authorized(self, payload: twitchio.authentication.UserTokenPayload) -> None:
