@@ -57,7 +57,7 @@ class Bot(commands.AutoBot):
 
     async def setup_hook(self) -> None:
         from twitchio.web import AiohttpAdapter
-        adapter = AiohttpAdapter(host="localhost", port=4343, domain="pry-shank-legged.ngrok-free.dev")
+        adapter = AiohttpAdapter(port=4343, domain="pry-shank-legged.ngrok-free.dev")
         await self.set_adapter(adapter)
         await self.add_component(MyComponent(self))
 
