@@ -55,11 +55,11 @@ class Bot(commands.AutoBot):
             redirect_uri="https://pry-shank-legged.ngrok-free.dev/oauth/callback",
         )
 
-async def setup_hook(self) -> None:
-    from twitchio.web import AiohttpAdapter
-    adapter = AiohttpAdapter(host="localhost", port=4343, domain="pry-shank-legged.ngrok-free.dev")
-    await self.set_adapter(adapter)
-    await self.add_component(MyComponent(self))
+    async def setup_hook(self) -> None:
+        from twitchio.web import AiohttpAdapter
+        adapter = AiohttpAdapter(host="localhost", port=4343, domain="pry-shank-legged.ngrok-free.dev")
+        await self.set_adapter(adapter)
+        await self.add_component(MyComponent(self))
 
     async def event_oauth_authorized(self, payload: twitchio.authentication.UserTokenPayload) -> None:
         await self.add_token(payload.access_token, payload.refresh_token)
