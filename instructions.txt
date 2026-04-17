@@ -1,0 +1,8 @@
+1. unzip le file, and open a terminal and navigate to this folder
+2. if u dont have python 3.11 (can check in a terminal by doing python --version) then download it here python.org/downloads 
+3. in terminal again,  enter 'python -m venv .venv'
+4. then 'pip install -r requirements.txt'
+5. 'python main.py'
+6. think then u just visit http://localhost:4343/oauth?scopes=channel:bot&force_verify=true to authorize it to be in ur chat
+7. if this works, any messages sent in ur chat should be printed to the terminal, so send a 'testing' or some bullshit if ur doing it offline
+8. if it works, just zip the folder and send it back my way

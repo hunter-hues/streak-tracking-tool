@@ -1,0 +1,4 @@
+python-dotenv
+asqlite
+aiohttp
+git+https://github.com/TwitchIO/TwitchIO.git
