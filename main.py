@@ -125,10 +125,10 @@ class MyComponent(commands.Component):
 
     # An example of listening to an event
     # We use a listener in our Component to display the messages received.
-    @commands.Component.listener()
-    async def event_message(self, payload: twitchio.ChatMessage) -> None:
-        LOGGER.info("event_message fired: broadcaster=%s chatter=%s text=%s", payload.broadcaster.name, payload.chatter.name, payload.text)
-        print(f"[{payload.broadcaster.name}] - {payload.chatter.name}: {payload.text}")
+    #@commands.Component.listener()
+    #async def event_message(self, payload: twitchio.ChatMessage) -> None:
+        #LOGGER.info("event_message fired: broadcaster=%s chatter=%s text=%s", payload.broadcaster.name, payload.chatter.name, payload.text)
+        #print(f"[{payload.broadcaster.name}] - {payload.chatter.name}: {payload.text}")
 
     @commands.command()
     async def streak(self, ctx: commands.Context, username: str = None) -> None:
@@ -158,6 +158,31 @@ class MyComponent(commands.Component):
             except Exception as e:
                 LOGGER.error(f"Failed to find streak for {target}: {e}")
                 await ctx.reply("Something went wrong looking up that streak :[")
+
+    @commands.command()
+    async def streakleaderboard(self, ctx: commands.Context) -> None:
+        try:
+            async with self.bot.token_database.acquire() as connection:
+                rows = await connection.fetchall(
+                    """
+                    SELECT username, streak_count
+                    FROM streaks
+                    ORDER BY streak_count DESC, username ASC
+                    LIMIT 5
+                    """
+                )
+
+            if not rows:
+                await ctx.reply("No streak data yet.")
+                return
+
+            lines = [f"{i+1}) {row['username']}: {row['streak_count']}" for i, row in enumerate(rows)]
+            await ctx.reply("Top 5 streaks: " + " | ".join(lines))
+
+        except Exception as e:
+            LOGGER.error(f"Failed to fetch streak leaderboard: {e}")
+            await ctx.reply("Something went wrong getting the leaderboard.")
+
         
 
     @commands.Component.listener()
