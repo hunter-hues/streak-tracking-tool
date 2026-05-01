@@ -141,7 +141,7 @@ class MyComponent(commands.Component):
                     if row is None:
                         await ctx.reply("No streak data for this user yet :o")
                     else:
-                        await ctx.reply(f"Your streak is {row['streak_count']}")
+                        await ctx.reply(f"Your streak is {row['streak_count']}(max streak of {row['max_streak']})")
             except Exception as e:
                 LOGGER.error(f"Failed to find streak for {target}: {e}")
                 await ctx.reply("Something went wrong looking up that streak :[")
@@ -154,7 +154,7 @@ class MyComponent(commands.Component):
                     if row is None:
                         await ctx.reply("No streak data for this user yet :o")
                     else:
-                        await ctx.reply(f"{target}'s streak is {row['streak_count']}")
+                        await ctx.reply(f"{target}'s streak is {row['streak_count']}(max streak of {row['max_streak']})")
             except Exception as e:
                 LOGGER.error(f"Failed to find streak for {target}: {e}")
                 await ctx.reply("Something went wrong looking up that streak :[")
@@ -165,9 +165,9 @@ class MyComponent(commands.Component):
             async with self.bot.token_database.acquire() as connection:
                 rows = await connection.fetchall(
                     """
-                    SELECT username, streak_count
+                    SELECT username, max_streak
                     FROM streaks
-                    ORDER BY streak_count DESC, username ASC
+                    ORDER BY max_streak DESC, username ASC
                     LIMIT 5
                     """
                 )
@@ -189,17 +189,22 @@ class MyComponent(commands.Component):
     async def event_chat_notification(self, payload) -> None:
         if payload.watch_streak:
             query = """
-                INSERT INTO streaks (user_id, username, streak_count, last_streak_date)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO streaks (user_id, username, streak_count, max_streak, last_streak_date)
+                VALUES (?, ?, ?, ?, ?)
                 ON CONFLICT(user_id)
                 DO UPDATE SET
                     username = excluded.username,
                     streak_count = excluded.streak_count,
+                    max_streak = MAX(streaks.max_streak, excluded.streak_count),
                     last_streak_date = excluded.last_streak_date;
             """
             try:
                 async with self.bot.token_database.acquire() as connection:
-                    await connection.execute(query, (payload.chatter.id, payload.chatter.name, payload.watch_streak.streak, payload.timestamp.strftime("%Y-%m-%d")))
+                    await connection.execute(query, (   payload.chatter.id,
+                                                        payload.chatter.name,
+                                                        payload.watch_streak.streak,
+                                                        payload.watch_streak.streak,
+                                                        payload.timestamp.strftime("%Y-%m-%d")))
                 print(f"{payload.chatter.name} is on a watch streak of {payload.watch_streak.streak}")
             except Exception as e:
                 LOGGER.error(f"Failed to save streak for {payload.chatter.name}: {e}")
@@ -234,7 +239,7 @@ async def setup_database(db: asqlite.Pool) -> tuple[list[tuple[str, str]], list[
                 eventsub.ChatNotificationSubscription(broadcaster_user_id=row["user_id"], user_id=BOT_ID),
             ])
 
-    query = """CREATE TABLE IF NOT EXISTS streaks(user_id TEXT PRIMARY KEY, username TEXT NOT NULL, streak_count INTEGER NOT NULL, last_streak_date TEXT NOT NULL)"""
+    query = """CREATE TABLE IF NOT EXISTS streaks(user_id TEXT PRIMARY KEY, username TEXT NOT NULL, streak_count INTEGER NOT NULL, max_streak INTEGER NOT NULL, last_streak_date TEXT NOT NULL)"""
     async with db.acquire() as connection:
         await connection.execute(query)
 
