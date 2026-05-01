@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 import asyncio
 import twitchio
-from datetime import datetime
+from datetime import datetime, timedelta
 
 load_dotenv()
 
@@ -121,6 +121,7 @@ class MyComponent(commands.Component):
         # Passing args is not required...
         # We pass bot here as an example...
         self.bot = bot
+        self._streakinfo_next_ok: datetime | None = None
         
 
     # An example of listening to an event
@@ -176,12 +177,25 @@ class MyComponent(commands.Component):
                 await ctx.reply("No streak data yet.")
                 return
 
-            lines = [f"{i+1}) {row['username']}: {row['streak_count']}" for i, row in enumerate(rows)]
+            lines = [f"{i+1}) {row['username']}: {row['max_streak']}" for i, row in enumerate(rows)]
             await ctx.reply("Top 5 streaks: " + " | ".join(lines))
 
         except Exception as e:
             LOGGER.error(f"Failed to fetch streak leaderboard: {e}")
             await ctx.reply("Something went wrong getting the leaderboard.")
+
+    @commands.command()
+    async def streakinfo(self, ctx: commands.Context) -> None:
+        now = datetime.now()
+        if self._streakinfo_next_ok is not None and now < self._streakinfo_next_ok:
+            remaining = int((self._streakinfo_next_ok - now).total_seconds())
+            await ctx.reply(f"Streak info is on cooldown — try again in {remaining}s.")
+            return
+
+        self._streakinfo_next_ok = now + timedelta(seconds=30)
+        await ctx.reply(
+            "Streaks are stored when you share the streak message - If not shared after 5/1/26 it might not be in the database - it only updates when you share, so it wont be 1:1 to ur current streak when u arent on day where you shared the stream streak - again this is not real time via an API, it relies on you sharing ur streaks when the bot is active ok"
+        )
 
         
 
