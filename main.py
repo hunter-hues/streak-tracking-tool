@@ -122,6 +122,7 @@ class MyComponent(commands.Component):
         # We pass bot here as an example...
         self.bot = bot
         self._streakinfo_next_ok: datetime | None = None
+        self._streakinfo_cooldown_notified = False
         
 
     # An example of listening to an event
@@ -187,12 +188,18 @@ class MyComponent(commands.Component):
     @commands.command()
     async def streakinfo(self, ctx: commands.Context) -> None:
         now = datetime.now()
+
         if self._streakinfo_next_ok is not None and now < self._streakinfo_next_ok:
-            remaining = int((self._streakinfo_next_ok - now).total_seconds())
-            await ctx.reply(f"Streak info is on cooldown — try again in {remaining}s.")
+            if not self._streakinfo_cooldown_notified:
+                remaining = int((self._streakinfo_next_ok - now).total_seconds())
+                await ctx.reply(f"Streak info is on cooldown — try again in {remaining}s.")
+                self._streakinfo_cooldown_notified = True
             return
 
+        # Cooldown is over (or first run), allow the command and reset the "notified" flag
+        self._streakinfo_cooldown_notified = False
         self._streakinfo_next_ok = now + timedelta(seconds=30)
+
         await ctx.reply(
             "Streaks are stored when you share the streak message - If not shared after 5/1/26 it might not be in the database - it only updates when you share, so it wont be 1:1 to ur current streak when u arent on day where you shared the stream streak - again this is not real time via an API, it relies on you sharing ur streaks when the bot is active ok"
         )
